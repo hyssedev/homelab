@@ -1,0 +1,40 @@
+# Secrets & environment
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+secrets.*
+
+# TLS certificates & keys
+*.pem
+*.key
+*.crt
+*.cer
+*.csr
+*.p12
+*.pfx
+certs/
+
+# Credentials / tokens
+*.token
+*credentials*
+*.htpasswd
+
+# Runtime & data
+data/
+volumes/
+*.sock
+*.pid
+
+# Logs
+*.log
+logs/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
