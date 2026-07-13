@@ -10,5 +10,41 @@ services:
     volumes:
       - grafana_storage:/var/lib/grafana
 
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    container_name: victoriametrics
+    restart: always
+    ports:
+      - 127.0.0.1:8428:8428
+      - 127.0.0.1:8089:8089
+      - 127.0.0.1:8089:8089/udp
+      - 127.0.0.1:2003:2003
+      - 127.0.0.1:2003:2003/udp
+      - 127.0.0.1:4242:4242
+    command:
+      - "--storageDataPath=/storage"
+      - "--graphiteListenAddr=:2003"
+      - "--opentsdbListenAddr=:4242"
+      - "--httpListenAddr=:8428"
+      - "--influxListenAddr=:8089"
+    volumes:
+      - vmdata:/storage
+
+  vmagent:
+    image: victoriametrics/vmagent:latest
+    depends_on:
+      - "victoriametrics"
+    ports:
+      - 127.0.0.1:8429:8429
+    volumes:
+      - vmagentdata:/vmagentdata
+      - ./scrape-config.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--promscrape.config=/etc/prometheus/prometheus.yml"
+      - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+    restart: always
+
 volumes:
   grafana_storage: {}
+  vmdata: {}
+  vmagentdata: {}
