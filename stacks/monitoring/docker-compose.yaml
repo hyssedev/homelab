@@ -10,8 +10,9 @@ services:
       - 127.0.0.1:3001:3000
     volumes:
       - grafana_storage:/var/lib/grafana
-      - ./provisioning/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
-      - ./provisioning/infinity.yml:/etc/grafana/provisioning/datasources/infinity.yml
+      - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./provisioning/dashboard:/etc/grafana/provisioning/dashboards
+      - ./provisioning/dashboards:/var/lib/grafana/dashboards
     networks:
       - monitoring
 
