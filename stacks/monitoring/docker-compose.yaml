@@ -1,17 +1,22 @@
 services:
   grafana:
-    image: grafana/grafana-enterprise
+    image: grafana/grafana:12.2.0
     container_name: grafana
     restart: unless-stopped
     environment:
       - GF_SERVER_ROOT_URL=https://grafana.internal.chrs.ro/
+      - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource
     ports:
       - 127.0.0.1:3001:3000
     volumes:
       - grafana_storage:/var/lib/grafana
+      - ./provisioning/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+      - ./provisioning/infinity.yml:/etc/grafana/provisioning/datasources/infinity.yml
+    networks:
+      - monitoring
 
   victoriametrics:
-    image: victoriametrics/victoria-metrics:latest
+    image: victoriametrics/victoria-metrics:v1.147.0
     container_name: victoriametrics
     restart: always
     ports:
@@ -29,11 +34,14 @@ services:
       - "--influxListenAddr=:8089"
     volumes:
       - vmdata:/storage
+    networks:
+      - monitoring
 
   vmagent:
-    image: victoriametrics/vmagent:latest
+    image: victoriametrics/vmagent:v1.147.0
     depends_on:
       - "victoriametrics"
+      - "nodeexporter"
     ports:
       - 127.0.0.1:8429:8429
     volumes:
@@ -42,9 +50,26 @@ services:
     command:
       - "--promscrape.config=/etc/prometheus/prometheus.yml"
       - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+    networks:
+      - monitoring
     restart: always
+
+  nodeexporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: nodeexporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - monitoring
 
 volumes:
   grafana_storage: {}
   vmdata: {}
   vmagentdata: {}
+
+networks:
+  monitoring:

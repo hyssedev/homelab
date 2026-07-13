@@ -10,3 +10,7 @@ scrape_configs:
   static_configs:
   - targets:
     - victoriametrics:8428
+- job_name: nodeexporter
+  static_configs:
+  - targets:
+    - nodeexporter:9100
