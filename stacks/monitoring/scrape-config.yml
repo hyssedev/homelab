@@ -18,3 +18,7 @@ scrape_configs:
   static_configs:
   - targets:
     - cadvisor:8080
+- job_name: haproxy
+  static_configs:
+  - targets:
+    - 172.20.0.1:8405

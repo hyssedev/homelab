@@ -42,7 +42,6 @@ services:
     image: victoriametrics/vmagent:v1.147.0
     depends_on:
       - "victoriametrics"
-      - "nodeexporter"
     ports:
       - 127.0.0.1:8429:8429
     volumes:
@@ -53,6 +52,8 @@ services:
       - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
     networks:
       - monitoring
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: always
 
   nodeexporter:
