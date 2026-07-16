@@ -6,6 +6,7 @@ services:
     environment:
       - GF_SERVER_ROOT_URL=https://grafana.internal.chrs.ro/
       - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource
+      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource
     ports:
       - 127.0.0.1:3001:3000
     volumes:
@@ -33,27 +34,28 @@ services:
       - "--opentsdbListenAddr=:4242"
       - "--httpListenAddr=:8428"
       - "--influxListenAddr=:8089"
+      - "--promscrape.config=/etc/prometheus/prometheus.yml"
     volumes:
       - vmdata:/storage
+      - ./scrape-config.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - monitoring
 
-  vmagent:
-    image: victoriametrics/vmagent:v1.147.0
-    depends_on:
-      - "victoriametrics"
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.51.0
+    container_name: victorialogs
     ports:
-      - 127.0.0.1:8429:8429
-    volumes:
-      - vmagentdata:/vmagentdata
-      - ./scrape-config.yml:/etc/prometheus/prometheus.yml
+      - 127.0.0.1:9428:9428
+      - "127.0.0.1:5140:5140/udp"
     command:
-      - "--promscrape.config=/etc/prometheus/prometheus.yml"
-      - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+      - "--storageDataPath=/vlogs"
+      - "--syslog.listenAddr.udp=:5140"
+    volumes:
+      - vldata:/vlogs
     networks:
       - monitoring
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: always
 
   nodeexporter:
@@ -82,7 +84,7 @@ services:
 volumes:
   grafana_storage: {}
   vmdata: {}
-  vmagentdata: {}
+  vldata: {}
 
 networks:
   monitoring:
