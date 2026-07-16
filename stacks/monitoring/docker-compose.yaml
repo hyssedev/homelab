@@ -5,8 +5,7 @@ services:
     restart: unless-stopped
     environment:
       - GF_SERVER_ROOT_URL=https://grafana.internal.chrs.ro/
-      - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource
-      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource
+      - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource,victoriametrics-logs-datasource
     ports:
       - 127.0.0.1:3001:3000
     volumes:
@@ -46,6 +45,7 @@ services:
   victorialogs:
     image: victoriametrics/victoria-logs:v1.51.0
     container_name: victorialogs
+    restart: always
     ports:
       - 127.0.0.1:9428:9428
       - "127.0.0.1:5140:5140/udp"
@@ -56,15 +56,14 @@ services:
       - vldata:/vlogs
     networks:
       - monitoring
-    restart: always
 
   nodeexporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: nodeexporter
+    restart: unless-stopped
     command:
       - '--path.rootfs=/host'
     pid: host
-    restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
     networks:

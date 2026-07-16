@@ -13,3 +13,8 @@ datasources:
   - name: VictoriaMetrics-Infinity
     type: yesoreyeram-infinity-datasource
     url: "http://victoriametrics:8428"
+  
+  - name: VictoriaLogs
+    type: victoriametrics-logs-datasource
+    access: proxy
+    url: http://victorialogs:9428
