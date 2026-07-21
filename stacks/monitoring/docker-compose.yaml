@@ -35,6 +35,40 @@ services:
     networks:
       - monitoring
 
+  vmalert:
+    image: victoriametrics/vmalert:v1.147.0
+    container_name: vmalert
+    restart: always
+    depends_on:
+      - victoriametrics
+      - alertmanager
+    ports:
+      - 127.0.0.1:8880:8880
+    command:
+      - "--datasource.url=http://victoriametrics:8428"
+      - "--remoteWrite.url=http://victoriametrics:8428"
+      - "--remoteRead.url=http://victoriametrics:8428"
+      - "--rule=/etc/alerts/*.yml"
+      - "--notifier.url=http://alertmanager:9093"
+      - "--external.url=https://grafana.internal.chrs.ro"
+    volumes:
+      - ./alerts.yml:/etc/alerts/alerts.yml:ro
+    networks:
+      - monitoring
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: alertmanager
+    restart: always
+    ports:
+      - 127.0.0.1:9093:9093
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./secrets/discord_webhook:/run/secrets/discord_webhook:ro
+      - amdata:/alertmanager
+    networks:
+      - monitoring
+
   victorialogs:
     image: victoriametrics/victoria-logs:v1.51.0
     container_name: victorialogs
@@ -91,6 +125,7 @@ volumes:
   vmdata: {}
   vldata: {}
   vector_data: {}
+  amdata: {}
 
 networks:
   monitoring:

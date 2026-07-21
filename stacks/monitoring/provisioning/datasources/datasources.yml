@@ -18,3 +18,11 @@ datasources:
     type: victoriametrics-logs-datasource
     access: proxy
     url: http://victorialogs:9428
+
+  - name: Alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    jsonData:
+      implementation: prometheus
+      handleGrafanaManagedAlerts: false
