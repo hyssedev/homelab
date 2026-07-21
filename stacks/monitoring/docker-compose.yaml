@@ -22,17 +22,10 @@ services:
     restart: always
     ports:
       - 127.0.0.1:8428:8428
-      - 127.0.0.1:8089:8089
-      - 127.0.0.1:8089:8089/udp
-      - 127.0.0.1:2003:2003
-      - 127.0.0.1:2003:2003/udp
       - 127.0.0.1:4242:4242
     command:
       - "--storageDataPath=/storage"
-      - "--graphiteListenAddr=:2003"
-      - "--opentsdbListenAddr=:4242"
       - "--httpListenAddr=:8428"
-      - "--influxListenAddr=:8089"
       - "--promscrape.config=/etc/prometheus/prometheus.yml"
     volumes:
       - vmdata:/storage
@@ -48,12 +41,25 @@ services:
     restart: always
     ports:
       - 127.0.0.1:9428:9428
-      - "127.0.0.1:5140:5140/udp"
     command:
       - "--storageDataPath=/vlogs"
-      - "--syslog.listenAddr.udp=:5140"
     volumes:
       - vldata:/vlogs
+    networks:
+      - monitoring
+
+  vector:
+    image: timberio/vector:0.57.0-alpine
+    container_name: vector
+    restart: unless-stopped
+    depends_on:
+      - victorialogs
+    ports:
+      - "127.0.0.1:5140:5140/udp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - vector_data:/var/lib/vector
     networks:
       - monitoring
 
@@ -84,6 +90,7 @@ volumes:
   grafana_storage: {}
   vmdata: {}
   vldata: {}
+  vector_data: {}
 
 networks:
   monitoring:
