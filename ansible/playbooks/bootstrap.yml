@@ -1,0 +1,37 @@
+---
+- name: Bootstrap VPS
+  hosts: vps
+  gather_facts: false
+  tasks:
+    - name: Install SSH public key for root
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', ssh_public_key_file) }}"
+
+- name: Create admin user
+  hosts: vps
+  gather_facts: false
+  tasks:
+    - name: Create the admin user
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        groups: sudo
+        append: true
+        shell: /bin/bash
+        state: present
+
+    - name: Install SSH public key for admin user
+      ansible.posix.authorized_key:
+        user: "{{ admin_user }}"
+        state: present
+        key: "{{ lookup('file', ssh_public_key_file) }}"
+
+    - name: Grant passwordless sudo to admin user
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ admin_user }}"
+        content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "visudo -cf %s"
