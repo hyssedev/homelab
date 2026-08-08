@@ -1,3 +1,7 @@
 # ---- Misc ----
 .DS_Store
 .vscode/
+
+# ---- Ansible ----
+ansible/inventory/hosts.yml
+.vault_pass
