@@ -97,6 +97,13 @@
         validate: 'sshd -t -f %s'
       notify: Restart ssh
 
+    - name: Apply SSH config changes now
+      ansible.builtin.meta: flush_handlers
+
+    - name: Continue on the new SSH port
+      ansible.builtin.set_fact:
+        ansible_port: "{{ ssh_port }}"
+
     - name: Configure sshd jail
       ansible.builtin.copy:
         dest: /etc/fail2ban/jail.d/sshd.local
