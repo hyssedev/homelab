@@ -1,4 +1,14 @@
 ---
 admin_user: "chrs"
+ssh_port: 55555
+packages:
+  - curl
+  - neovim
+  - btop
+  - git
+  - jq
+  - fail2ban
+  - ufw
+  - unattended-upgrades
 ssh_public_key_file: "~/.ssh/datalix.pub"
 ansible_ssh_private_key_file: "~/.ssh/datalix"
