@@ -7,6 +7,7 @@
     stacks_src: "{{ playbook_dir }}/../../stacks"
     stacks_dest: /opt/stacks
     stacks:
+      - haproxy
       - dynacat
       - chrs.ro
   tasks:

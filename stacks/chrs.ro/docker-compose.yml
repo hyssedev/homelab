@@ -2,6 +2,10 @@ services:
   chrs.ro:
     image: ghcr.io/hyssedev/chrs:latest
     container_name: "chrs.ro"
-    ports:
-      - 80:80
+    networks:
+      - reverse-proxy
     restart: unless-stopped
+
+networks:
+  reverse-proxy:
+    external: true

@@ -1,0 +1,18 @@
+services:
+  haproxy:
+    image: haproxytech/haproxy-alpine:3.4.3
+    container_name: haproxy
+    networks:
+      - public
+      - reverse-proxy
+    volumes:
+      - ./config:/usr/local/etc/haproxy:ro
+    ports:
+      - 80:80
+      - 127.0.0.1:8404:8404
+      - 127.0.0.1:8405:8405
+
+networks:
+  public:
+  reverse-proxy:
+    name: reverse-proxy
