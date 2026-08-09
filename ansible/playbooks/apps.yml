@@ -8,6 +8,7 @@
     stacks_dest: /opt/stacks
     stacks:
       - dynacat
+      - chrs.ro
   tasks:
     - name: Sync stack files
       ansible.builtin.copy:

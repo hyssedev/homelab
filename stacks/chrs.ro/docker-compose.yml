@@ -1,0 +1,7 @@
+services:
+  chrs.ro:
+    image: ghcr.io/hyssedev/chrs:latest
+    container_name: "chrs.ro"
+    ports:
+      - 80:80
+    restart: unless-stopped
