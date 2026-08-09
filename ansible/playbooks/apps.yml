@@ -1,0 +1,22 @@
+---
+- name: Deploy app stacks
+  hosts: vps
+  gather_facts: false
+  become: true
+  vars:
+    stacks_src: "{{ playbook_dir }}/../../stacks"
+    stacks_dest: /opt/stacks
+    stacks:
+      - dynacat
+  tasks:
+    - name: Sync stack files
+      ansible.builtin.copy:
+        src: "{{ stacks_src }}/{{ item }}/"
+        dest: "{{ stacks_dest }}/{{ item }}/"
+      loop: "{{ stacks }}"
+
+    - name: Bring stacks up
+      community.docker.docker_compose_v2:
+        project_src: "{{ stacks_dest }}/{{ item }}"
+        state: present
+      loop: "{{ stacks }}"
