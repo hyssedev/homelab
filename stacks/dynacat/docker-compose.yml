@@ -1,7 +1,7 @@
 services:
   dynacat:
     container_name: dynacat
-    image: panonim/dynacat
+    image: panonim/dynacat:2.4.0
     restart: unless-stopped
     networks:
       - reverse-proxy
@@ -9,7 +9,6 @@ services:
       - ./config:/app/config
       - ./assets:/app/assets
       - /etc/localtime:/etc/localtime:ro
-    env_file: .env
 
 networks:
   reverse-proxy:

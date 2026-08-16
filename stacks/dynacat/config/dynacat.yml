@@ -1,7 +1,6 @@
 pages:
   - name: Home
-    # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
-    # hide-desktop-navigation: true
+    hide-desktop-navigation: true
     hide-from-navigation: true
     columns:
       - size: small
@@ -71,28 +70,18 @@ pages:
           - type: search
             autofocus: true
 
-          # - type: monitor
-          #   cache: 1m
-          #   title: Services
-          #   sites:
-          #     - title: Jellyfin
-          #       url: https://yourdomain.com/
-          #       icon: si:jellyfin
-          #     - title: Gitea
-          #       url: https://yourdomain.com/
-          #       icon: si:gitea
-          #     - title: qBittorrent # only for Linux ISOs, of course
-          #       url: https://yourdomain.com/
-          #       icon: si:qbittorrent
-          #     - title: Immich
-          #       url: https://yourdomain.com/
-          #       icon: si:immich
-          #     - title: AdGuard Home
-          #       url: https://yourdomain.com/
-          #       icon: si:adguard
-          #     - title: Vaultwarden
-          #       url: https://yourdomain.com/
-          #       icon: si:vaultwarden
+          - type: monitor
+            cache: 1m
+            title: Services
+            sites:
+              - title: HAProxy
+                url: https://www.chrs.ro/
+                icon: sh:haproxy
+                method: HEAD
+              - title: Tinyauth
+                url: https://auth.chrs.ro/
+                icon: sh:tinyauth
+                method: HEAD
 
           - type: bookmarks
             groups:
@@ -137,14 +126,9 @@ theme:
   primary-color: 24 97 58
   negative-color: 209 88 54
 
-
+server:
+  proxied: true
 
 # TODO:
-# add docker containers
 # add other rss feeds that I find nice
 # add Torrenting
-
-
-# TODO: set this once behind reverse proxy
-# server:
-#   proxied: true
