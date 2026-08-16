@@ -22,3 +22,13 @@
         project_src: "{{ stacks_dest }}/{{ item }}"
         state: present
       loop: "{{ stacks }}"
+
+    - name: Schedule daily HAProxy cert dump to disk
+      ansible.builtin.cron:
+        name: haproxy-dump-certs
+        hour: "4"
+        minute: "17"
+        job: >-
+          bash /opt/stacks/haproxy/scripts/haproxy-dump-certs.sh
+          -s /opt/stacks/haproxy/certs/admin.sock
+          -p /opt/stacks/haproxy/certs

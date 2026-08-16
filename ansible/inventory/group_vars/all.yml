@@ -10,5 +10,7 @@ packages:
   - fail2ban
   - ufw
   - unattended-upgrades
+  - socat
+  - cron
 ssh_public_key_file: "~/.ssh/datalix.pub"
 ansible_ssh_private_key_file: "~/.ssh/datalix"
