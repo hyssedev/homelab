@@ -7,6 +7,7 @@
     stacks_src: "{{ playbook_dir }}/../../stacks"
     stacks_dest: /opt/stacks
     stacks:
+      - tinyauth
       - dynacat
       - chrs.ro
       - haproxy
@@ -16,6 +17,23 @@
         src: "{{ stacks_src }}/{{ item }}/"
         dest: "{{ stacks_dest }}/{{ item }}/"
       loop: "{{ stacks }}"
+
+    - name: Require Tinyauth users
+      ansible.builtin.assert:
+        that:
+          - (tinyauth_users | default('') | length) > 0
+        fail_msg: >-
+          Set tinyauth_users to a Tinyauth username:bcrypt-hash record,
+          preferably in an Ansible Vault encrypted variable file.
+
+    - name: Install Tinyauth users secret
+      ansible.builtin.copy:
+        content: "{{ tinyauth_users }}\n"
+        dest: "{{ stacks_dest }}/tinyauth/secrets/users"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
 
     - name: Create reverse proxy network
       community.docker.docker_network:
