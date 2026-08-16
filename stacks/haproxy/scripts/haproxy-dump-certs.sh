@@ -2,6 +2,7 @@
 #
 # Dump certificates from the HAProxy stats or master socket to the filesystem
 # Experimental script
+# Upstream: https://github.com/haproxy/haproxy/blob/master/admin/cli/haproxy-dump-certs
 #
 
 set -e
