@@ -7,15 +7,19 @@
     stacks_src: "{{ playbook_dir }}/../../stacks"
     stacks_dest: /opt/stacks
     stacks:
-      - haproxy
       - dynacat
       - chrs.ro
+      - haproxy
   tasks:
     - name: Sync stack files
       ansible.builtin.copy:
         src: "{{ stacks_src }}/{{ item }}/"
         dest: "{{ stacks_dest }}/{{ item }}/"
       loop: "{{ stacks }}"
+
+    - name: Create reverse proxy network
+      community.docker.docker_network:
+        name: reverse-proxy
 
     - name: Bring stacks up
       community.docker.docker_compose_v2:

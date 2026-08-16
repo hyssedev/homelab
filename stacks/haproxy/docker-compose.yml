@@ -17,4 +17,4 @@ services:
 networks:
   public:
   reverse-proxy:
-    name: reverse-proxy
+    external: true
