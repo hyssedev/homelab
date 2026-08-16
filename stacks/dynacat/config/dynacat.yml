@@ -82,6 +82,10 @@ pages:
                 url: https://auth.chrs.ro/
                 icon: sh:tinyauth
                 method: HEAD
+              - title: Dockhand
+                url: https://docker.chrs.ro/
+                url: sh:dockhand
+                method: HEAD
 
           - type: bookmarks
             groups:

@@ -10,6 +10,7 @@
       - tinyauth
       - dynacat
       - chrs.ro
+      - dockhand
       - haproxy
   tasks:
     - name: Sync stack files
