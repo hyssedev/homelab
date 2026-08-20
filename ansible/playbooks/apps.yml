@@ -83,3 +83,10 @@
           bash /opt/stacks/haproxy/scripts/haproxy-dump-certs.sh
           -s /opt/stacks/haproxy/certs/admin.sock
           -p /opt/stacks/haproxy/certs
+
+    - name: Schedule daily Cloudflare IP update
+      ansible.builtin.cron:
+        name: haproxy-update-cloudflare-ips
+        hour: "4"
+        minute: "18"
+        job: bash /opt/stacks/haproxy/scripts/update-cloudflare-ips.sh
