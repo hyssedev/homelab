@@ -84,7 +84,7 @@ pages:
                 method: HEAD
               - title: Dockhand
                 url: https://docker.chrs.ro/
-                url: sh:dockhand
+                icon: sh:dockhand
                 method: HEAD
 
           - type: bookmarks

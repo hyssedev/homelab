@@ -11,6 +11,7 @@
       - dynacat
       - chrs.ro
       - dockhand
+      - kener
       - haproxy
   tasks:
     - name: Sync stack files
@@ -36,6 +37,32 @@
         mode: "0600"
       no_log: true
 
+    - name: Require Kener secret key
+      ansible.builtin.assert:
+        that:
+          - (kener_secret_key | default('') | length) >= 32
+        fail_msg: >-
+          Set kener_secret_key to a random value of at least 32 characters,
+          preferably in an Ansible Vault encrypted variable file.
+
+    - name: Install Kener secret environment
+      ansible.builtin.copy:
+        content: |
+          KENER_SECRET_KEY={{ kener_secret_key }}
+        dest: "{{ stacks_dest }}/kener/secrets/kener.env"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Set Kener database ownership
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/kener/database"
+        state: directory
+        owner: "1000"
+        group: "1000"
+        recurse: true
+
     - name: Create reverse proxy network
       community.docker.docker_network:
         name: reverse-proxy
@@ -44,6 +71,7 @@
       community.docker.docker_compose_v2:
         project_src: "{{ stacks_dest }}/{{ item }}"
         state: present
+        remove_orphans: true
       loop: "{{ stacks }}"
 
     - name: Schedule daily HAProxy cert dump to disk

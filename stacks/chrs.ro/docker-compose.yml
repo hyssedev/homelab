@@ -1,7 +1,7 @@
 services:
-  chrs.ro:
+  chrs:
     image: ghcr.io/hyssedev/chrs:latest
-    container_name: "chrs.ro"
+    container_name: chrs
     networks:
       - reverse-proxy
     restart: unless-stopped
