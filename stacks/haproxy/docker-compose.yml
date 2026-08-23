@@ -6,6 +6,7 @@ services:
     networks:
       - reverse-proxy
       - cloudflare-tunnel
+      - monitoring
     volumes:
       - ./config:/usr/local/etc/haproxy:ro
     ports:
@@ -16,4 +17,6 @@ networks:
   reverse-proxy:
     external: true
   cloudflare-tunnel:
+    external: true
+  monitoring:
     external: true

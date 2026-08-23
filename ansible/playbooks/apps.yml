@@ -12,6 +12,8 @@
       - chrs.ro
       - dockhand
       - kener
+      - prometheus
+      - grafana
       - cloudflared
       - haproxy
   tasks:
@@ -90,7 +92,22 @@
         state: directory
         owner: "1000"
         group: "1000"
-        recurse: true
+
+    - name: Set Grafana data ownership
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/grafana/data"
+        state: directory
+        owner: "472"
+        group: "0"
+        mode: "0750"
+
+    - name: Set Prometheus data ownership
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/prometheus/data"
+        state: directory
+        owner: "65534"
+        group: "65534"
+        mode: "0750"
 
     - name: Create reverse proxy network
       community.docker.docker_network:
@@ -99,6 +116,10 @@
     - name: Create Cloudflare Tunnel network
       community.docker.docker_network:
         name: cloudflare-tunnel
+
+    - name: Create monitoring network
+      community.docker.docker_network:
+        name: monitoring
 
     - name: Bring stacks up
       community.docker.docker_compose_v2:
