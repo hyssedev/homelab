@@ -39,11 +39,21 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+          cache: pip
+          cache-dependency-path: ansible/requirements.txt
 
       - name: Install Ansible
-        run: pip install ansible-core
+        run: pip install --requirement requirements.txt
+
+      - name: Cache Ansible collections
+        id: collections-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ansible/collections
+          key: ansible-collections-${{ runner.os }}-${{ hashFiles('ansible/requirements.yml') }}
 
       - name: Install Ansible collections
+        if: steps.collections-cache.outputs.cache-hit != 'true'
         run: ansible-galaxy collection install --requirements-file requirements.yml
 
       - name: Create CI inventory
