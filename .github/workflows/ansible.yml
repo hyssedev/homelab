@@ -1,0 +1,83 @@
+---
+name: Checks
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "ansible/**"
+      - "stacks/**"
+      - ".github/workflows/ansible.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "ansible/**"
+      - "stacks/**"
+      - ".github/workflows/ansible.yml"
+
+concurrency:
+  group: ansible-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ansible-lint:
+    name: Ansible lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ansible
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: ansible/requirements.txt
+
+      - name: Install Ansible
+        run: pip install --requirement requirements.txt
+
+      - name: Cache Ansible collections
+        id: collections-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ansible/collections
+          key: ansible-collections-${{ runner.os }}-${{ hashFiles('ansible/requirements.yml') }}
+
+      - name: Install Ansible collections
+        if: steps.collections-cache.outputs.cache-hit != 'true'
+        run: ansible-galaxy collection install --requirements-file requirements.yml
+
+      - name: Create CI inventory
+        run: cp inventory/hosts.example.yml inventory/hosts.yml
+
+      - name: Lint Ansible playbooks
+        run: ansible-lint playbooks/
+
+  compose-check:
+    name: Compose check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Create CI environment files
+        run: printf 'KENER_SECRET_KEY=ci-placeholder\n' > stacks/kener/secrets/kener.env
+
+      - name: Check Compose configurations
+        run: |
+          for stack in stacks/*/docker-compose.yml; do
+            docker compose --project-directory "$(dirname "$stack")" config --quiet
+          done
