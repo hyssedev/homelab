@@ -7,4 +7,4 @@ all:
           ansible_host: 192.168.0.1
       vars:
         ansible_user: chrs
-        ansible_port: 55555
+        ansible_port: 22
