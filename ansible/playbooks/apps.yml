@@ -12,6 +12,7 @@
       - chrs.ro
       - dockhand
       - kener
+      - cloudflared
       - haproxy
   tasks:
     - name: Sync stack files
@@ -19,6 +20,34 @@
         src: "{{ stacks_src }}/{{ item }}/"
         dest: "{{ stacks_dest }}/{{ item }}/"
       loop: "{{ stacks }}"
+
+    - name: Require Cloudflare Tunnel credentials
+      ansible.builtin.assert:
+        that:
+          - cloudflare_tunnel_id | default('') | length > 0
+          - cloudflare_tunnel_credentials | default('') | length > 0
+          - (cloudflare_tunnel_credentials | from_json).TunnelID == cloudflare_tunnel_id
+        fail_msg: >-
+          Set cloudflare_tunnel_id and cloudflare_tunnel_credentials.
+          The credentials must belong to the configured tunnel.
+      no_log: true
+
+    - name: Create Cloudflare Tunnel credentials directory
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/cloudflared/credentials"
+        state: directory
+        owner: root
+        group: "65532"
+        mode: "0750"
+
+    - name: Install Cloudflare Tunnel credentials
+      ansible.builtin.copy:
+        content: "{{ cloudflare_tunnel_credentials }}\n"
+        dest: "{{ stacks_dest }}/cloudflared/credentials/tunnel.json"
+        owner: root
+        group: "65532"
+        mode: "0440"
+      no_log: true
 
     - name: Require Tinyauth users
       ansible.builtin.assert:
@@ -67,26 +96,13 @@
       community.docker.docker_network:
         name: reverse-proxy
 
+    - name: Create Cloudflare Tunnel network
+      community.docker.docker_network:
+        name: cloudflare-tunnel
+
     - name: Bring stacks up
       community.docker.docker_compose_v2:
         project_src: "{{ stacks_dest }}/{{ item }}"
         state: present
         remove_orphans: true
       loop: "{{ stacks }}"
-
-    - name: Schedule daily HAProxy cert dump to disk
-      ansible.builtin.cron:
-        name: haproxy-dump-certs
-        hour: "4"
-        minute: "17"
-        job: >-
-          bash /opt/stacks/haproxy/scripts/haproxy-dump-certs.sh
-          -s /opt/stacks/haproxy/certs/admin.sock
-          -p /opt/stacks/haproxy/certs
-
-    - name: Schedule daily Cloudflare IP update
-      ansible.builtin.cron:
-        name: haproxy-update-cloudflare-ips
-        hour: "4"
-        minute: "18"
-        job: bash /opt/stacks/haproxy/scripts/update-cloudflare-ips.sh

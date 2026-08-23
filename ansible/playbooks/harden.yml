@@ -131,18 +131,6 @@
         port: "{{ ssh_port }}"
         proto: tcp
 
-    - name: Allow HTTP through ufw
-      community.general.ufw:
-        rule: allow
-        port: "80"
-        proto: tcp
-
-    - name: Allow HTTPS through ufw
-      community.general.ufw:
-        rule: allow
-        port: "443"
-        proto: tcp
-
     - name: Set ufw default deny incoming
       community.general.ufw:
         direction: incoming

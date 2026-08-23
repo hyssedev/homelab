@@ -1,0 +1,11 @@
+tunnel: fca9ed13-1adb-4eb9-a40c-484b451b3100
+credentials-file: /etc/cloudflared/credentials/tunnel.json
+
+ingress:
+  - hostname: chrs.ro
+    service: http://haproxy:8080
+
+  - hostname: "*.chrs.ro"
+    service: http://haproxy:8080
+
+  - service: http_status:404

@@ -1,0 +1,26 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.2
+    container_name: cloudflared
+    restart: unless-stopped
+    command:
+      - tunnel
+      - --config
+      - /etc/cloudflared/config.yml
+      - --metrics
+      - 0.0.0.0:20241
+      - run
+    networks:
+      - cloudflare-tunnel
+    volumes:
+      - ./config/config.yml:/etc/cloudflared/config.yml:ro
+      - ./credentials/tunnel.json:/etc/cloudflared/credentials/tunnel.json:ro
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  cloudflare-tunnel:
+    external: true
