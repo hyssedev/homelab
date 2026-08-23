@@ -16,6 +16,12 @@
       - grafana
       - cloudflared
       - haproxy
+    grafana_dashboards:
+      - name: haproxy
+        id: 12693
+        revision: 14
+        datasource_input: DS_PROMETHEUS
+        datasource_uid: prometheus
   tasks:
     - name: Sync stack files
       ansible.builtin.copy:
@@ -100,6 +106,42 @@
         owner: "472"
         group: "0"
         mode: "0750"
+
+    - name: Create Grafana dashboard directories
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/grafana/dashboards"
+        state: directory
+        owner: root
+        group: "0"
+        mode: "0750"
+
+    - name: Fetch Grafana dashboards
+      ansible.builtin.uri:
+        url: >-
+          https://grafana.com/api/dashboards/{{ item.id }}/revisions/{{ item.revision }}/download
+        return_content: true
+      loop: "{{ grafana_dashboards }}"
+      loop_control:
+        label: "{{ item.name }} revision {{ item.revision }}"
+      delegate_to: localhost
+      become: false
+      register: grafana_dashboard_downloads
+
+    - name: Install Grafana dashboards
+      ansible.builtin.copy:
+        content: >-
+          {{ item.content
+             | replace(
+                 '${' ~ item.item.datasource_input ~ '}',
+                 item.item.datasource_uid
+               ) }}
+        dest: "{{ stacks_dest }}/grafana/dashboards/{{ item.item.name }}.json"
+        owner: root
+        group: "0"
+        mode: "0640"
+      loop: "{{ grafana_dashboard_downloads.results }}"
+      loop_control:
+        label: "{{ item.item.name }} revision {{ item.item.revision }}"
 
     - name: Set Prometheus data ownership
       ansible.builtin.file:

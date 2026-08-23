@@ -24,6 +24,8 @@ services:
     volumes:
       - ./data:/var/lib/grafana
       - ./provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+      - ./provisioning/dashboards/default.yml:/etc/grafana/provisioning/dashboards/default.yml:ro
+      - ./dashboards:/var/lib/grafana-dashboards:ro
 
 networks:
   reverse-proxy:
