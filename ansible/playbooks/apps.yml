@@ -183,17 +183,13 @@
         group: "65534"
         mode: "0750"
 
-    - name: Create reverse proxy network
+    - name: Create shared Docker networks
       community.docker.docker_network:
-        name: reverse-proxy
-
-    - name: Create Cloudflare Tunnel network
-      community.docker.docker_network:
-        name: cloudflare-tunnel
-
-    - name: Create monitoring network
-      community.docker.docker_network:
-        name: monitoring
+        name: "{{ item }}"
+      loop:
+        - reverse-proxy
+        - cloudflare-tunnel
+        - monitoring
 
     - name: Bring stacks up
       community.docker.docker_compose_v2:
