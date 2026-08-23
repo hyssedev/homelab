@@ -27,6 +27,11 @@
         revision: 45
         datasource_input: ds_prometheus
         datasource_uid: prometheus
+      - name: cadvisor
+        id: 14282
+        revision: 1
+        datasource_input: DS_PROMETHEUS
+        datasource_uid: prometheus
   tasks:
     - name: Sync stack files
       ansible.builtin.copy:
