@@ -1,5 +1,5 @@
 ---
-name: Ansible
+name: Checks
 
 on:
   push:
@@ -7,12 +7,14 @@ on:
       - main
     paths:
       - "ansible/**"
+      - "stacks/**"
       - ".github/workflows/ansible.yml"
   pull_request:
     branches:
       - main
     paths:
       - "ansible/**"
+      - "stacks/**"
       - ".github/workflows/ansible.yml"
 
 concurrency:
@@ -63,4 +65,22 @@ jobs:
         run: |
           for playbook in playbooks/*.yml; do
             ansible-playbook --syntax-check "$playbook"
+          done
+
+  compose-check:
+    name: Compose check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Create CI environment files
+        run: printf 'KENER_SECRET_KEY=ci-placeholder\n' > stacks/kener/secrets/kener.env
+
+      - name: Check Compose configurations
+        run: |
+          for stack in stacks/*/docker-compose.yml; do
+            docker compose --project-directory "$(dirname "$stack")" config --quiet
           done
