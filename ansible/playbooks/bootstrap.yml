@@ -2,7 +2,8 @@
 - name: Bootstrap VPS
   hosts: vps
   gather_facts: false
-  remote_user: root
+  vars:
+    ansible_user: root
   tasks:
     - name: Install SSH public key for root
       ansible.posix.authorized_key:
@@ -13,7 +14,8 @@
 - name: Create admin user
   hosts: vps
   gather_facts: false
-  remote_user: root
+  vars:
+    ansible_user: root
   tasks:
     - name: Create the admin user
       ansible.builtin.user:

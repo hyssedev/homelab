@@ -2,11 +2,13 @@
 admin_user: "chrs"
 ssh_port: 55555
 packages:
+  - ca-certificates
   - curl
   - neovim
   - btop
   - git
   - jq
+  - rsync
   - fail2ban
   - ufw
   - unattended-upgrades
@@ -14,6 +16,39 @@ packages:
   - cron
 ssh_public_key_file: "~/.ssh/datalix.pub"
 ansible_ssh_private_key_file: "~/.ssh/datalix"
+stacks_src: "{{ playbook_dir }}/../../stacks"
+stacks_dest: /opt/stacks
+stacks:
+  - tinyauth
+  - dynacat
+  - chrs.ro
+  - dockhand
+  - kener
+  - prometheus
+  - grafana
+  - cloudflared
+  - haproxy
+grafana_dashboards:
+  - name: haproxy
+    id: 12693
+    revision: 14
+    datasource_input: DS_PROMETHEUS
+    datasource_uid: prometheus
+  - name: node-exporter-full
+    id: 1860
+    revision: 45
+    datasource_input: ds_prometheus
+    datasource_uid: prometheus
+  - name: cadvisor
+    id: 14282
+    revision: 1
+    datasource_input: DS_PROMETHEUS
+    datasource_uid: prometheus
+  - name: cloudflared
+    id: 17457
+    revision: 6
+    datasource_input: DS_PROMETHEUS
+    datasource_uid: prometheus
 cloudflare_tunnel_id: "fca9ed13-1adb-4eb9-a40c-484b451b3100"
 cloudflare_tunnel_credentials: !vault |
           $ANSIBLE_VAULT;1.1;AES256
