@@ -2,5 +2,18 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "schedule": [
+    "before 6am every day"
+  ],
+  "timezone": "Europe/Bucharest",
+  "enabledManagers": [
+    "ansible-galaxy",
+    "docker-compose",
+    "github-actions",
+    "pip_requirements"
+  ],
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2
 }
