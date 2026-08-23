@@ -7,6 +7,7 @@ packages:
   - btop
   - git
   - jq
+  - rsync
   - fail2ban
   - ufw
   - unattended-upgrades

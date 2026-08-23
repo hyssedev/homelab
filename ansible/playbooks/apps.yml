@@ -39,11 +39,25 @@
         datasource_uid: prometheus
   tasks:
     - name: Sync stack files
-      ansible.builtin.copy:
-        src: "{{ stacks_src }}/{{ item }}/"
-        dest: "{{ stacks_dest }}/{{ item }}/"
-        mode: preserve
-      loop: "{{ stacks }}"
+      ansible.posix.synchronize:
+        src: "{{ stacks_src }}/"
+        dest: "{{ stacks_dest }}/"
+        archive: true
+        owner: false
+        group: false
+        rsync_path: sudo -n rsync
+        rsync_opts:
+          - "--exclude=*.backup"
+          - "--exclude=/cloudflared/credentials/*"
+          - "--exclude=/tinyauth/data/*"
+          - "--exclude=/tinyauth/secrets/*"
+          - "--exclude=/dockhand/data/*"
+          - "--exclude=/kener/database/*"
+          - "--exclude=/kener/redis/*"
+          - "--exclude=/kener/secrets/*"
+          - "--exclude=/grafana/data/*"
+          - "--exclude=/grafana/dashboards/*"
+          - "--exclude=/prometheus/data/*"
 
     - name: Require Cloudflare Tunnel credentials
       ansible.builtin.assert:
@@ -115,6 +129,7 @@
         owner: "1000"
         group: "1000"
         mode: "0750"
+        recurse: true
 
     - name: Set Grafana data ownership
       ansible.builtin.file:
