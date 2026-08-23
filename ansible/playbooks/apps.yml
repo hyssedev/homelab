@@ -38,6 +38,21 @@
         datasource_input: DS_PROMETHEUS
         datasource_uid: prometheus
   tasks:
+    - name: Require deployment secrets
+      ansible.builtin.assert:
+        that:
+          - cloudflare_tunnel_id | default('') | length > 0
+          - cloudflare_tunnel_credentials | default('') | length > 0
+          - (cloudflare_tunnel_credentials | from_json).TunnelID == cloudflare_tunnel_id
+          - tinyauth_users | default('') | length > 0
+          - kener_secret_key | default('') | length >= 32
+        fail_msg: >-
+          Set valid cloudflare_tunnel_id, cloudflare_tunnel_credentials,
+          tinyauth_users, and kener_secret_key values, preferably in an
+          Ansible Vault encrypted variable file. The Cloudflare credentials
+          must belong to the configured tunnel, and the Kener secret must be
+          at least 32 characters.
+
     - name: Sync stack files
       ansible.posix.synchronize:
         src: "{{ stacks_src }}/"
@@ -59,17 +74,6 @@
           - "--exclude=/grafana/dashboards/*"
           - "--exclude=/prometheus/data/*"
 
-    - name: Require Cloudflare Tunnel credentials
-      ansible.builtin.assert:
-        that:
-          - cloudflare_tunnel_id | default('') | length > 0
-          - cloudflare_tunnel_credentials | default('') | length > 0
-          - (cloudflare_tunnel_credentials | from_json).TunnelID == cloudflare_tunnel_id
-        fail_msg: >-
-          Set cloudflare_tunnel_id and cloudflare_tunnel_credentials.
-          The credentials must belong to the configured tunnel.
-      no_log: true
-
     - name: Create Cloudflare Tunnel credentials directory
       ansible.builtin.file:
         path: "{{ stacks_dest }}/cloudflared/credentials"
@@ -87,14 +91,6 @@
         mode: "0440"
       no_log: true
 
-    - name: Require Tinyauth users
-      ansible.builtin.assert:
-        that:
-          - (tinyauth_users | default('') | length) > 0
-        fail_msg: >-
-          Set tinyauth_users to a Tinyauth username:bcrypt-hash record,
-          preferably in an Ansible Vault encrypted variable file.
-
     - name: Install Tinyauth users secret
       ansible.builtin.copy:
         content: "{{ tinyauth_users }}\n"
@@ -103,14 +99,6 @@
         group: root
         mode: "0600"
       no_log: true
-
-    - name: Require Kener secret key
-      ansible.builtin.assert:
-        that:
-          - (kener_secret_key | default('') | length) >= 32
-        fail_msg: >-
-          Set kener_secret_key to a random value of at least 32 characters,
-          preferably in an Ansible Vault encrypted variable file.
 
     - name: Install Kener secret environment
       ansible.builtin.copy:
