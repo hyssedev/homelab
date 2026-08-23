@@ -3,7 +3,7 @@ name: Ansible
 
 on:
   push:
-    branches-ignore:
+    branches:
       - main
     paths:
       - "ansible/**"
