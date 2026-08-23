@@ -1,150 +1,194 @@
-# Homelab Ansible
+# Christian's Homelab
 
-Provider-agnostic Ansible automation for provisioning a Debian VPS and running
-internet-facing homelab services with Docker Compose, HAProxy, automatic TLS,
-and Tinyauth forward authentication.
+**[Overview](#overview) | [Features](#features) | [Tech Stack](#tech-stack) | [Get Started](#get-started) | [Operations](#operations)**
 
-## Architecture
+[![Checks](https://img.shields.io/github/actions/workflow/status/hyssedev/homelab/ansible.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=checks)](https://github.com/hyssedev/homelab/actions/workflows/ansible.yml)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white)](https://developer.mend.io/github/hyssedev/homelab)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square&logo=gnu&logoColor=white)](LICENSE)
+[![Ansible](https://img.shields.io/badge/Ansible-managed-EE0000?style=flat-square&logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+
+Infrastructure as Code for taking a fresh Debian VPS from its initial SSH login
+to a hardened, monitored, and internet-accessible homelab.
+
+## Overview
+
+The host is provisioned with Ansible and runs each application as an independent
+Docker Compose project. Cloudflare Tunnel provides an outbound-only public entry
+path, HAProxy handles internal routing and policy, and Tinyauth protects private
+applications. Prometheus and Grafana provide host and container observability.
 
 ```mermaid
 flowchart LR
-    client[Internet client] --> dns[Cloudflare DNS / proxy]
-    dns --> haproxy[HAProxy :80 / :443]
-
-    haproxy --> site[chrs.ro]
-    haproxy --> auth[Tinyauth<br/>auth.chrs.ro]
-    haproxy --> check{Auth check}
-    check --> auth
-    check --> dashboard[Dynacat<br/>dashboard.chrs.ro]
-
-    letsencrypt[Let's Encrypt] -. HTTP-01 .-> haproxy
-    haproxy -. admin socket .-> dump[Daily certificate dump]
-    dump -. persists .-> certs[(certs/)]
+    internet[Internet] --> cloudflare[Cloudflare]
+    cloudflare --> tunnel[cloudflared]
+    tunnel --> proxy[HAProxy]
+    proxy --> public[Public services]
+    proxy --> auth[Tinyauth]
+    auth --> private[Protected services]
+    grafana[Grafana] --> prometheus[Prometheus]
+    prometheus --> metrics[Host, container,<br/>proxy and tunnel metrics]
 ```
 
-HAProxy is the only public application entry point. Services communicate over
-the external `reverse-proxy` Docker network and do not publish application
-ports directly. The landing page is public; the dashboard requires a Tinyauth
-session.
+No application ports are published publicly on the host. HAProxy communicates
+with `cloudflared` over a private Docker network, while statistics and metrics
+are bound only to loopback or internal monitoring networks.
 
-| Component | Purpose |
-| --- | --- |
-| Ansible | Bootstraps, hardens, and configures the VPS |
-| Docker Compose | Runs each service as an independent stack |
-| HAProxy | TLS termination, routing, security policy, and health checks |
-| Tinyauth | Login UI and forward authentication for protected services |
-| Let's Encrypt | Native HAProxy ACME certificates using HTTP-01 |
+## Features
 
-## Repository Layout
+- [x] Reproducible provisioning from a fresh Debian VPS
+- [x] SSH hardening, UFW, fail2ban, and unattended upgrades
+- [x] Rootless public ingress through Cloudflare Tunnel
+- [x] Central routing and security policy with HAProxy
+- [x] Forward authentication for private applications
+- [x] Isolated Docker Compose projects and shared networks
+- [x] Vault-encrypted deployment secrets
+- [x] Host and per-container metrics with 30-day retention
+- [x] Automatically provisioned Grafana data source and dashboards
+- [x] Pull request validation for Ansible and Docker Compose
+- [x] Daily dependency updates with review through Renovate
+- [x] Persistent application data excluded from deployments and Git
 
-```text
-ansible/
-  inventory/            Host inventory and shared variables
-  playbooks/            Bootstrap, hardening, Docker, and app deployment
-stacks/
-  haproxy/              Edge proxy, native ACME, Lua auth integration
-  tinyauth/             Authentication service and persistent session data
-  chrs.ro/              Public landing page
-  dynacat/              Protected dashboard
-```
+## Tech Stack
 
-## Recreate A VPS
+<table>
+  <tr>
+    <th>Logo</th>
+    <th>Technology</th>
+    <th>Purpose</th>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/ansible/EE0000"></td>
+    <td><a href="https://www.ansible.com/">Ansible</a></td>
+    <td>Provisioning, hardening, secrets, and deployments</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/debian/A81D33"></td>
+    <td><a href="https://www.debian.org/">Debian</a></td>
+    <td>VPS operating system</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/docker/2496ED"></td>
+    <td><a href="https://www.docker.com/">Docker Compose</a></td>
+    <td>Independent application stacks</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/cloudflare/F38020"></td>
+    <td><a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/">Cloudflare Tunnel</a></td>
+    <td>Outbound-only public ingress</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/haproxy/106DA9"></td>
+    <td><a href="https://www.haproxy.org/">HAProxy</a></td>
+    <td>Routing, authentication policy, and health checks</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/grafana/F46800"></td>
+    <td><a href="https://grafana.com/">Grafana</a></td>
+    <td>Dashboards and observability interface</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://cdn.simpleicons.org/prometheus/E6522C"></td>
+    <td><a href="https://prometheus.io/">Prometheus</a></td>
+    <td>Metrics collection and time-series storage</td>
+  </tr>
+  <tr>
+    <td><img width="32" src="https://docs.renovatebot.com/assets/images/logo.png"></td>
+    <td><a href="https://docs.renovatebot.com/">Renovate</a></td>
+    <td>Reviewed dependency and container image updates</td>
+  </tr>
+</table>
 
-Requirements:
+## Applications
 
-- A fresh Debian VPS reachable as `root` over SSH
-- Ansible installed locally
-- An SSH key pair and the Ansible Vault password
-- DNS records for `chrs.ro`, `www`, `dashboard`, and `auth` pointing to the VPS
-
-Run commands from `ansible/`.
-
-1. Install the required Ansible collections:
-
-   ```sh
-   ansible-galaxy collection install -r requirements.yml
-   ```
-
-2. Create the ignored inventory and update the host address. Use the VPS's
-   initial SSH port, normally `22`:
-
-   ```sh
-   cp inventory/hosts.example.yml inventory/hosts.yml
-   ```
-
-3. Review `inventory/group_vars/all.yml`, especially `admin_user`, `ssh_port`,
-   and the local SSH key paths. Configure vault access either interactively
-   with `--ask-vault-pass` or through the ignored password file:
-
-   ```sh
-   export ANSIBLE_VAULT_PASSWORD_FILE=../.vault_pass
-   ```
-
-4. Bootstrap the SSH key and administrative user, then harden the host:
-
-   ```sh
-   ansible-playbook playbooks/bootstrap.yml
-   ansible-playbook playbooks/harden.yml
-   ```
-
-5. Change `ansible_port` in `inventory/hosts.yml` to the hardened `ssh_port`,
-   then install Docker and deploy the stacks:
-
-   ```sh
-   ansible-playbook playbooks/docker.yml
-   ansible-playbook playbooks/apps.yml
-   ```
-
-The app playbook copies stacks to `/opt/stacks`, creates the shared Docker
-network, writes runtime secrets, starts HAProxy last, and installs the daily
-certificate persistence cron job.
-
-## Authentication
-
-Generate a Tinyauth `username:bcrypt-hash` record:
-
-```sh
-docker run --rm -it ghcr.io/tinyauthapp/tinyauth:v5.1.3 user create --interactive
-```
-
-Encrypt the complete record instead of committing the bcrypt hash directly:
-
-```sh
-ansible-vault encrypt_string --ask-vault-pass --stdin-name tinyauth_users
-```
-
-Store the resulting `!vault` block in
-`ansible/inventory/group_vars/all.yml`. During deployment, Ansible writes the
-decrypted value to `/opt/stacks/tinyauth/secrets/users` with mode `0600`.
-
-## TLS And Persistence
-
-HAProxy obtains the certificate declared in `haproxy.cfg` directly from Let's
-Encrypt. HTTP-01 challenges are served on port 80 before the HTTP-to-HTTPS
-redirect. Renewed certificates live in HAProxy memory, so a root cron job runs
-the official [`haproxy-dump-certs`](https://github.com/haproxy/haproxy/blob/master/admin/cli/haproxy-dump-certs)
-script daily and writes them to the bind-mounted `stacks/haproxy/certs/`
-directory.
-
-Runtime state is intentionally excluded from Git:
-
-| Path on the VPS | Contents | Recovery behavior |
+| Application | Purpose | Access |
 | --- | --- | --- |
-| `/opt/stacks/haproxy/certs/` | Certificate, private key, ACME account key | Reissued on a fresh VPS if not restored |
-| `/opt/stacks/tinyauth/data/` | SQLite sessions and future OIDC state | Existing sessions are lost if not restored |
-| `/opt/stacks/tinyauth/secrets/users` | Decrypted Tinyauth user record | Recreated from Ansible Vault |
+| `chrs.ro` | Landing page | Public |
+| Kener | Status page and uptime monitoring | Public |
+| Tinyauth | Authentication portal | Public login |
+| Dynacat | Homelab dashboard | Protected |
+| Dockhand | Docker management | Protected |
+| Grafana | Monitoring dashboards | Protected |
+| Prometheus | Metrics storage | Internal |
+| node_exporter | Host metrics | Internal |
+| cAdvisor | Container metrics | Internal |
 
-For disaster recovery, the repository, vault password, and SSH private key are
-sufficient to rebuild the host. Back up the ignored HAProxy and Tinyauth data
-directories only when preserving the ACME account or active sessions matters.
+## Get Started
 
-## Adding A Service
+Requirements are a fresh Debian VPS, Python 3 with pip, an SSH key, an Ansible
+Vault password, and a configured Cloudflare Tunnel.
 
-Create a Compose stack under `stacks/`, attach it to the external
-`reverse-proxy` network, add it to `stacks` in `ansible/playbooks/apps.yml`, and
-define its hostname, certificate SAN, ACL, backend, and health check in
-`stacks/haproxy/config/haproxy.cfg`. Add the hostname to the `protected` ACL
-when it should require Tinyauth.
+Run from `ansible/`:
 
-Vendored HAProxy Lua dependencies and their pinned upstream revisions are
-documented in [`stacks/haproxy/config/lua/README.md`](stacks/haproxy/config/lua/README.md).
+```sh
+python3 -m pip install -r requirements.txt
+ansible-galaxy collection install -r requirements.yml
+cp inventory/hosts.example.yml inventory/hosts.yml
+```
+
+Review `inventory/hosts.yml` and `inventory/group_vars/all.yml`, then provision
+the host:
+
+```sh
+export ANSIBLE_VAULT_PASSWORD_FILE=../.vault_pass
+ansible-playbook playbooks/provision.yml
+```
+
+Change the inventory from SSH port `22` to the configured hardened port, then
+deploy all services:
+
+```sh
+ansible-playbook playbooks/apps.yml
+```
+
+`provision.yml` runs bootstrap, hardening, and Docker installation in order.
+`apps.yml` validates secrets, synchronizes stack definitions, preserves runtime
+data, creates shared networks, and reconciles every Compose project.
+
+## Operations
+
+### Monitoring
+
+Prometheus retains up to 30 days or 5 GB. Grafana automatically provisions its
+Prometheus data source and four pinned community dashboards:
+
+| Dashboard | ID | Revision |
+| --- | ---: | ---: |
+| HAProxy | 12693 | 14 |
+| Node Exporter Full | 1860 | 45 |
+| cAdvisor exporter | 14282 | 1 |
+| Cloudflare Tunnels | 17457 | 6 |
+
+### Persistence
+
+Persistent paths under `/opt/stacks` include Tinyauth sessions, Dockhand state,
+Kener data, Grafana state, and the Prometheus TSDB. They are excluded from Git
+and rsync source updates. Back them up when preserving state or history matters.
+
+### Automation
+
+GitHub Actions runs `ansible-lint` and `docker compose config --quiet` on
+relevant pull requests and pushes to `main`. Jobs use read-only permissions,
+timeouts, dependency caches, and no deployment credentials.
+
+Renovate checks daily before 06:00 in `Europe/Bucharest` and opens reviewable
+pull requests for GitHub Actions, Python tooling, Ansible Galaxy collections,
+and Compose images. Updates are never merged automatically.
+
+### Adding A Service
+
+1. Create a Compose project under `stacks/`.
+2. Attach web applications to the external `reverse-proxy` network.
+3. Add the project to `stacks` in `ansible/inventory/group_vars/all.yml`.
+4. Add its hostname, ACL, backend, and health check to HAProxy.
+5. Add the hostname to HAProxy's `protected` ACL when authentication is needed.
+
+## License
+
+Copyright (C) 2026 Cristian-Ionut Sauciuc.
+
+Distributed under the GNU General Public License v3.0. See [`LICENSE`](LICENSE)
+for details.
+
+Vendored HAProxy Lua dependencies and their upstream revisions are documented
+separately in [`stacks/haproxy/config/lua/README.md`](stacks/haproxy/config/lua/README.md).
