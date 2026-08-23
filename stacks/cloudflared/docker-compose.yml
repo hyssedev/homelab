@@ -12,6 +12,7 @@ services:
       - run
     networks:
       - cloudflare-tunnel
+      - monitoring
     volumes:
       - ./config/config.yml:/etc/cloudflared/config.yml:ro
       - ./credentials/tunnel.json:/etc/cloudflared/credentials/tunnel.json:ro
@@ -23,4 +24,6 @@ services:
 
 networks:
   cloudflare-tunnel:
+    external: true
+  monitoring:
     external: true

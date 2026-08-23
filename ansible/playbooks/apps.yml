@@ -12,8 +12,31 @@
       - chrs.ro
       - dockhand
       - kener
+      - prometheus
+      - grafana
       - cloudflared
       - haproxy
+    grafana_dashboards:
+      - name: haproxy
+        id: 12693
+        revision: 14
+        datasource_input: DS_PROMETHEUS
+        datasource_uid: prometheus
+      - name: node-exporter-full
+        id: 1860
+        revision: 45
+        datasource_input: ds_prometheus
+        datasource_uid: prometheus
+      - name: cadvisor
+        id: 14282
+        revision: 1
+        datasource_input: DS_PROMETHEUS
+        datasource_uid: prometheus
+      - name: cloudflared
+        id: 17457
+        revision: 6
+        datasource_input: DS_PROMETHEUS
+        datasource_uid: prometheus
   tasks:
     - name: Sync stack files
       ansible.builtin.copy:
@@ -90,7 +113,58 @@
         state: directory
         owner: "1000"
         group: "1000"
-        recurse: true
+
+    - name: Set Grafana data ownership
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/grafana/data"
+        state: directory
+        owner: "472"
+        group: "0"
+        mode: "0750"
+
+    - name: Create Grafana dashboard directories
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/grafana/dashboards"
+        state: directory
+        owner: root
+        group: "0"
+        mode: "0750"
+
+    - name: Fetch Grafana dashboards
+      ansible.builtin.uri:
+        url: >-
+          https://grafana.com/api/dashboards/{{ item.id }}/revisions/{{ item.revision }}/download
+        return_content: true
+      loop: "{{ grafana_dashboards }}"
+      loop_control:
+        label: "{{ item.name }} revision {{ item.revision }}"
+      delegate_to: localhost
+      become: false
+      register: grafana_dashboard_downloads
+
+    - name: Install Grafana dashboards
+      ansible.builtin.copy:
+        content: >-
+          {{ item.content
+             | replace(
+                 '${' ~ item.item.datasource_input ~ '}',
+                 item.item.datasource_uid
+               ) }}
+        dest: "{{ stacks_dest }}/grafana/dashboards/{{ item.item.name }}.json"
+        owner: root
+        group: "0"
+        mode: "0640"
+      loop: "{{ grafana_dashboard_downloads.results }}"
+      loop_control:
+        label: "{{ item.item.name }} revision {{ item.item.revision }}"
+
+    - name: Set Prometheus data ownership
+      ansible.builtin.file:
+        path: "{{ stacks_dest }}/prometheus/data"
+        state: directory
+        owner: "65534"
+        group: "65534"
+        mode: "0750"
 
     - name: Create reverse proxy network
       community.docker.docker_network:
@@ -99,6 +173,10 @@
     - name: Create Cloudflare Tunnel network
       community.docker.docker_network:
         name: cloudflare-tunnel
+
+    - name: Create monitoring network
+      community.docker.docker_network:
+        name: monitoring
 
     - name: Bring stacks up
       community.docker.docker_compose_v2:
