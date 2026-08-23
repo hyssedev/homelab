@@ -25,8 +25,8 @@ permissions:
   contents: read
 
 jobs:
-  syntax-check:
-    name: Syntax check
+  ansible-lint:
+    name: Ansible lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -61,11 +61,8 @@ jobs:
       - name: Create CI inventory
         run: cp inventory/hosts.example.yml inventory/hosts.yml
 
-      - name: Check playbook syntax
-        run: |
-          for playbook in playbooks/*.yml; do
-            ansible-playbook --syntax-check "$playbook"
-          done
+      - name: Lint Ansible playbooks
+        run: ansible-lint playbooks/
 
   compose-check:
     name: Compose check
