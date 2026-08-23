@@ -1,0 +1,57 @@
+---
+name: Ansible
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - "ansible/**"
+      - ".github/workflows/ansible.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "ansible/**"
+      - ".github/workflows/ansible.yml"
+
+concurrency:
+  group: ansible-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-check:
+    name: Syntax check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ansible
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install Ansible
+        run: pip install ansible-core
+
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install --requirements-file requirements.yml
+
+      - name: Create CI inventory
+        run: cp inventory/hosts.example.yml inventory/hosts.yml
+
+      - name: Check playbook syntax
+        run: |
+          for playbook in playbooks/*.yml; do
+            ansible-playbook --syntax-check "$playbook"
+          done
