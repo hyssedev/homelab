@@ -15,6 +15,24 @@ services:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./data:/prometheus
 
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    container_name: node-exporter
+    restart: unless-stopped
+    pid: host
+    networks:
+      - monitoring
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+)($|/)
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - /:/host:ro,rslave
+
 networks:
   monitoring:
     external: true
