@@ -22,3 +22,8 @@ scrape_configs:
     static_configs:
       - targets:
           - cadvisor:8080
+
+  - job_name: cloudflared
+    static_configs:
+      - targets:
+          - cloudflared:20241

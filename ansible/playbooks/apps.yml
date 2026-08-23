@@ -32,6 +32,11 @@
         revision: 1
         datasource_input: DS_PROMETHEUS
         datasource_uid: prometheus
+      - name: cloudflared
+        id: 17457
+        revision: 6
+        datasource_input: DS_PROMETHEUS
+        datasource_uid: prometheus
   tasks:
     - name: Sync stack files
       ansible.builtin.copy:
