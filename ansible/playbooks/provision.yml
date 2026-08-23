@@ -1,0 +1,9 @@
+---
+- name: Bootstrap VPS
+  ansible.builtin.import_playbook: bootstrap.yml
+
+- name: Harden VPS
+  ansible.builtin.import_playbook: harden.yml
+
+- name: Install Docker
+  ansible.builtin.import_playbook: docker.yml
