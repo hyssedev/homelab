@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     container_name: kener-redis
     restart: unless-stopped
     networks:
