@@ -1,6 +1,6 @@
 services:
   haproxy:
-    image: haproxytech/haproxy-alpine:3.4.3
+    image: haproxytech/haproxy-alpine:3.4.4
     container_name: haproxy
     restart: unless-stopped
     networks:
